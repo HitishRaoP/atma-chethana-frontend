@@ -1,0 +1,162 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+html, body {
+    height: 100vh;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+body {
+    background-color: #f5f7fa;
+}
+
+.container {
+    height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-right: 50px; /* Increased right padding */
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1a3c34;
+}
+
+/* Main Content */
+.main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    padding: 20px;
+    overflow: hidden;
+    gap: 20px; /* Reduced space between image and form */
+}
+
+/* Illustration */
+.illustration {
+    flex: 0.7; /* Covers 30% of the screen */
+    display: flex;
+    justify-content: flex-start; /* Moves image towards the left */
+    align-items: center;
+}
+
+.illustration img {
+    width: 100%; /* Ensures it fills the allocated space */
+    max-height: 65vh; /* Slightly larger */
+    object-fit: contain; /* Show the entire image without cropping */
+}
+
+/* Login Form */
+.login-form {
+    flex: 8.3; /* Changed from 8.3 to take more space */
+    max-width: 450px; /* Increased from 350px */
+    padding: 40px 60px 40px 50px; /* Increased padding for more internal space */
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-form h2 {
+    font-size: 38px; /* Increased from 24px */
+    color: rgb(61, 61, 179);
+    margin-bottom: 10px; /* Increased from 8px */
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+}
+
+.logo-img {
+    width: 50px;  /* Adjust size as needed */
+    height: auto;
+    margin-right: 10px; /* Adds spacing between logo and text */
+}
+
+
+.subtitle {
+    font-size: 14px; /* Increased from 12px */
+    color: #666;
+    margin-bottom: 20px; /* Increased from 15px */
+}
+
+.login-form label {
+    display: block;
+    font-size: 18px; /* Increased from 12px */
+    color: black;
+    margin-bottom: 6px; /* Increased from 4px */
+}
+
+.login-form input {
+    width: 100%;
+    padding: 10px; /* Increased from 8px */
+    margin-bottom: 15px; /* Increased from 10px */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px; /* Increased from 12px */
+}
+
+.forgot-password {
+    display: block;
+    text-align: right;
+    font-size: 14px; /* Increased from 12px */
+    color: rgb(107, 107, 188);
+    text-decoration: none;
+    margin-bottom: 20px; /* Increased from 15px */
+}
+
+.sign-in-btn {
+    width: 100%;
+    padding: 12px; /* Increased from 10px */
+    background-color: rgb(61, 61, 179);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px; /* Increased from 14px */
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+
+
+.sign-in-btn:hover {
+    background-color: #134d44;
+}
+
+/* Footer */
+footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 30px;
+    background-color: #fff;
+    font-size: 10px;
+    color: #666;
+}
+
+.developed-by {
+    color: #e91e63;
+}
