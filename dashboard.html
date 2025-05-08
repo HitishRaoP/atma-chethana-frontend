@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="icon" type="image/png"  href="images/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="topbar">
+        <div class="left-section">
+            <div class="logo">
+                <img src="images/logo.png" alt="Logo" class="logo-img">
+                Athma Chetana
+            </div>
+        </div>
+        <nav class="menu">
+            <a href="#" class="active" data-section="dashboard">Dashboard</a>
+            <a href="#" data-section="pending">Pending Appointments</a>
+            <a href="#" data-section="students">Student Record</a>
+        </nav>
+        <div class="right-section">
+            <!-- Google Sheet icon updated to specific spreadsheet -->
+            <a href="https://docs.google.com/spreadsheets/d/1TiQaayBPix6Za3Z0BpLM8S-CLrH07K-7ZOgciMyaLyA/edit?authuser=mohithjain.cs22@bmsce.ac.in" target="_blank" class="gsheet-icon">
+                <img src="images/gsheet.jpg" alt="Google Sheet" class="gsheet-img">
+            </a>
+            <!-- Gmail link for manvi.cs22@bmsce.ac.in -->
+            <a href="https://mail.google.com/mail/u/0/#inbox?authuser=manvi.cs22@bmsce.ac.in" target="_blank" class="gmail-icon">
+                <img src="images/gmail.png" alt="Gmail" class="gmail-img">
+            </a>
+            <div class="avatar" id="profileAvatar">S</div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="profile-header">
+                    <div class="profile-avatar">S</div>
+                    <div class="profile-info">
+                        <div class="profile-name">Ms. Sneha H</div>
+                        <div class="profile-role">Counsellor</div>
+                    </div>
+                </div>
+                <div class="dropdown-menu">
+                    <a href="forgotpswrd.html" class="dropdown-item">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                    <a href="#" class="dropdown-item" id="signOutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sign Out Confirmation Modal -->
+        <div class="modal-overlay" id="signoutModal" style="display:none;">
+            <div class="confirmation-modal">
+                <h3>Sign Out Confirmation</h3>
+                <p>Are you sure you want to sign out?</p>
+                <div class="modal-actions">
+                    <button class="cancel-btn" id="cancelSignout">Not Now</button>
+                    <button class="confirm-btn" id="confirmSignout">Yes, Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar (Dashboard Stats) -->
+        <div class="sidebar">
+            <div class="stat-box">
+                <h2 id="studentCount">0</h2>
+                <p>No. of Students</p>
+            </div>
+            <div class="stat-box">
+                <h2 id="sessionCount">0</h2>
+                <p>Sessions</p>
+            </div>
+            <div class="stat-box">
+                <h2 id="pendingSessionCount">0</h2>
+                <p>Pending sessions</p>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div id="dashboardContent" class="content-section">
+            <h2>Scheduled Appointments</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Department</th>
+                            <th>Usn</th>
+                            <th>Semester</th>
+                            <th>Appointment Date</th>
+                            <th>Time</th>
+                            <th>Reason</th>
+                            <th>Completed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="pendingContent" class="content-section" style="display:none;">
+            <h2>Pending Appointments</h2>
+            <div class="table-container">
+                <table class="pending-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Department</th>
+                            <th>Usn</th>
+                            <th>Semester</th>
+                            <th>Reason</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="pending-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="studentsContent" class="content-section" style="display:none;">
+            <h2>Student Records</h2>
+
+            <!-- Search and Filter Controls -->
+            <div class="student-search-controls">
+                <div class="filter-group">
+                    <label for="studentDeptFilter">Department:</label>
+                    <select id="studentDeptFilter">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="studentSemFilter">Semester:</label>
+                    <select id="studentSemFilter" disabled>
+                        <option value="">Select Department First</option>
+                    </select>
+                </div>
+
+                <div class="search-group">
+                    <label for="studentNameSearch">Search by Name:</label>
+                    <input type="text" id="studentNameSearch" placeholder="Enter student name...">
+                </div>
+            </div>
+
+            <!-- Student Cards Container -->
+            <div class="student-cards-container">
+                <!-- Student cards will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Student Profile Modal -->
+        <div class="profile-modal-overlay" id="profileModal" style="display:none;">
+            <div class="profile-modal compact-modal">
+                <div class="profile-modal-header">
+                    <div class="profile-modal-avatar" id="modalAvatar">R</div>
+                    <div class="profile-modal-name" id="modalName">Rahul Sharma</div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="profile-modal-section">
+                    <div class="profile-modal-info">
+                        <div class="profile-modal-label">USN:</div>
+                        <div class="profile-modal-value" id="modalUsn">1BM22CS001</div>
+                    </div>
+                    <div class="profile-modal-info">
+                        <div class="profile-modal-label">Soul Score:</div>
+                        <div class="profile-modal-value" id="modalSoulScore">75</div>
+                    </div>
+                    <div class="profile-modal-info">
+                        <div class="profile-modal-label">Department:</div>
+                        <div class="profile-modal-value" id="modalDept">Physics Department</div>
+                    </div>
+                    <div class="profile-modal-info">
+                        <div class="profile-modal-label">Semester:</div>
+                        <div class="profile-modal-value" id="modalSem">3rd Sem</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="profile-modal-section">
+                    <h3>Session History</h3>
+                    <div class="profile-modal-sessions" id="modalSessions">
+                        <!-- Sessions will be added here dynamically -->
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="profile-modal-section">
+                    <h3>Remarks</h3>
+                    <div class="profile-modal-remarks">
+                        <textarea id="modalRemarks" rows="4" placeholder="Enter remarks here..."></textarea>
+                        <div class="remark-actions">
+                            <span class="remark-delete" id="deleteRemark">×</span>
+                            <span class="remark-save" id="saveRemark">✓</span>
+                        </div>
+                    </div>
+                    <div class="remark-notification" id="remarkNotification" style="display:none;">Saved successfully</div>
+                </div>
+
+                <div class="profile-modal-close">
+                    <button class="close-profile-btn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+export const BACKEND_URL = 'atma-chethana-backend.vercel.app';
