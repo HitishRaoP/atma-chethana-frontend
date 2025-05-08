@@ -562,7 +562,7 @@ Looking forward to our session.</textarea>
         const reason = row.cells[4].textContent;
 
         try {
-            // Create new appointment in backend
+            // Single API call to create appointment and send email
             const response = await fetch('http://localhost:8080/api/appointment/book-appointment', {
                 method: 'POST',
                 headers: {
@@ -576,33 +576,18 @@ Looking forward to our session.</textarea>
                     reason: reason,
                     date: dateObj.toISOString(),
                     time: formattedTime,
-                    status: 'scheduled'
+                    status: 'scheduled',
+                    emailData: {
+                        subject: 'Appointment Confirmation',
+                        message: message
+                    }
                 })
             });
 
             const data = await response.json();
-            console.log('Appointment creation response:', data); // Debug log
+            console.log('Appointment creation response:', data);
 
             if (data.success) {
-                // Send confirmation email
-                const emailResponse = await fetch('http://localhost:8080/api/counsellor/send-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        usn: usn,
-                        subject: 'Appointment Confirmation',
-                        message: message,
-                        senderEmail: 'khalandermohammed734@gmail.com'
-                    })
-                });
-
-                const emailData = await emailResponse.json();
-                if (!emailData.success) {
-                    console.error('Failed to send email:', emailData.message);
-                }
-
                 // Add to dashboard table
                 const dashboardTableBody = document.querySelector("#dashboardContent table tbody");
                 const newRow = document.createElement("tr");
@@ -628,7 +613,7 @@ Looking forward to our session.</textarea>
                 // Update stats
                 updateDashboardStats();
 
-                showNotification("Confirmation email sent successfully! Appointment moved to Dashboard.");
+                showNotification(data.message || "Appointment confirmed and email sent successfully!");
             } else {
                 showNotification(data.message || "Failed to create appointment. Please try again.");
             }
