@@ -9,76 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return `${hours}:${minutesStr} ${ampm}`;
   }
 
-  // Departments data
-  const departments = [
-    "Aerospace Engineering",
-    "Artificial Intelligence and Data Science",
-    "Bio-Technology",
-    "Chemical Engineering",
-    "Civil Engineering",
-    "Computer Applications (MCA)",
-    "Computer Science and Business Systems",
-    "Computer Science and Engineering",
-    "Computer Science and Engineering (DS)",
-    "Computer Science and Engineering (IoT and CS)",
-    "Electrical and Electronics Engineering",
-    "Electronics and Communication Engineering",
-    "Electronics and Instrumentation Engineering",
-    "Electronics and Telecommunication Engineering",
-    "Industrial Engineering and Management",
-    "Information Science and Engineering",
-    "Machine Learning (AI and ML)",
-    "Management Studies and Research Centre",
-    "Mechanical Engineering",
-    "Medical Electronics Engineering",
-    "Physics Department",
-    "Chemistry Department",
-    "Mathematics Department",
-  ];
-
-  // Initialize department dropdown
-  const deptDropdown = document.getElementById("deptDropdown");
-  departments.forEach((dept) => {
-    const option = document.createElement("option");
-    option.value = dept;
-    option.textContent = dept;
-    deptDropdown.appendChild(option);
-  });
-
-  // Function to filter tables by department
-  function filterTablesByDepartment(selectedDept) {
-    const dashboardRows = document.querySelectorAll(
-      "#dashboardContent table tbody tr"
-    );
-    dashboardRows.forEach((row) => {
-      const deptCell = row.cells[1];
-      row.style.display =
-        selectedDept === "" || deptCell.textContent === selectedDept
-          ? ""
-          : "none";
-    });
-
-    const pendingRows = document.querySelectorAll(
-      "#pendingContent table tbody tr"
-    );
-    pendingRows.forEach((row) => {
-      const deptCell = row.cells[1];
-      row.style.display =
-        selectedDept === "" || deptCell.textContent === selectedDept
-          ? ""
-          : "none";
-    });
-
-    if (document.getElementById("studentsContent").style.display === "block") {
-      filterStudents();
-    }
-  }
-
-  // Handle department filter
-  deptDropdown.addEventListener("change", function () {
-    filterTablesByDepartment(this.value);
-  });
-
   // Handle navigation clicks
   document.querySelectorAll(".menu a").forEach((link) => {
     link.addEventListener("click", function (e) {
@@ -97,8 +27,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("pendingContent").style.display = "block";
       } else if (section === "students") {
         document.getElementById("studentsContent").style.display = "block";
+        loadStudentRecords();
       }
-      filterTablesByDepartment(deptDropdown.value);
     });
   });
 
@@ -106,18 +36,32 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("dashboardContent").style.display = "block";
 
   // Dashboard statistics
-  function updateDashboardStats() {
-    const studentCount = document.querySelectorAll(".student-card").length;
-    const sessionCount = document.querySelectorAll(
-      "#dashboardContent table tbody tr"
-    ).length;
-    const pendingSessionCount = document.querySelectorAll(
-      "#pendingContent table tbody tr"
-    ).length;
-    document.getElementById("studentCount").textContent = studentCount;
-    document.getElementById("sessionCount").textContent = sessionCount;
-    document.getElementById("pendingSessionCount").textContent =
-      pendingSessionCount;
+  async function updateDashboardStats() {
+    try {
+        // Get all appointments
+        const response = await fetch('http://localhost:8080/api/appointment');
+        const data = await response.json();
+
+        if (data.success) {
+            const appointments = data.appointments;
+
+            // Count total students (unique users)
+            const uniqueStudents = new Set(appointments.map(apt => apt.usn)).size;
+
+            // Count total sessions (all appointments)
+            const totalSessions = appointments.length;
+
+            // Count pending sessions (appointments with status 'scheduled')
+            const pendingSessions = appointments.filter(apt => apt.status === 'scheduled').length;
+
+            // Update the stats in the UI
+            document.getElementById("studentCount").textContent = uniqueStudents;
+            document.getElementById("sessionCount").textContent = totalSessions;
+            document.getElementById("pendingSessionCount").textContent = pendingSessions;
+        }
+    } catch (error) {
+        console.error('Error updating dashboard stats:', error);
+    }
   }
 
   // Sort dashboard table
@@ -157,74 +101,115 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Load dashboard data from localStorage
   async function loadDashboardData() {
-    const dashboardTableBody = document.querySelector(
-      "#dashboardContent table tbody"
-    );
-    const response = await fetch(`http://localhost:8080/api/appointment`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const { appointments } = await response.json();
-    if (appointments) {
-      dashboardTableBody.innerHTML = "";
-      appointments.forEach((item) => {
-        if (!item.completed) {
-          const newRow = document.createElement("tr");
-          newRow.innerHTML = `
-                        <td>${item.studentName}</td>
-                        <td>${item.department}</td>
-                        <td>${item.usn}</td>
-                        <td>${item.semester}</td>
-                        <td>${new Date(
-                          item.createdAt
-                        ).toLocaleDateString()}</td>
-                        <td>${new Date(
-                          item.createdAt
-                        ).toLocaleTimeString()}</td>
-                        <td>${item.reason}</td>
-                    `;
-          dashboardTableBody.appendChild(newRow);
+    try {
+        const response = await fetch('http://localhost:8080/api/appointment');
+        const data = await response.json();
+
+        if (data.success) {
+            const dashboardTableBody = document.querySelector("#dashboardContent table tbody");
+            dashboardTableBody.innerHTML = '';
+
+            data.appointments.forEach(appointment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${appointment.studentName}</td>
+                    <td>${appointment.department}</td>
+                    <td>${appointment.usn}</td>
+                    <td>${appointment.semester}</td>
+                    <td>${new Date(appointment.date).toLocaleDateString()}</td>
+                    <td>${appointment.time}</td>
+                    <td>${appointment.reason}</td>
+                    <td>
+                        <input type="checkbox"
+                               class="status-checkbox"
+                               data-appointment-id="${appointment._id}"
+                               ${appointment.status === 'completed' ? 'checked' : ''}>
+                    </td>
+                `;
+                dashboardTableBody.appendChild(row);
+            });
+
+            // Add event listeners to checkboxes
+            document.querySelectorAll('.status-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', handleStatusChange);
+            });
+
+            // Update stats after loading dashboard data
+            updateDashboardStats();
         }
-      });
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
     }
   }
 
-  // Load pending data from localStorage, preserving HTML rows if present
+  // Load pending data
   async function loadPendingData() {
-    const pendingTableBody = document.querySelector(
-      "#pendingContent table tbody"
-    );
-    const savedData = localStorage.getItem("pendingData");
+    try {
+        const response = await fetch('http://localhost:8080/api/appointment');
+        const data = await response.json();
 
-    pendingTableBody.innerHTML = "";
+        if (data.success) {
+            const pendingTableBody = document.querySelector("#pendingContent table tbody");
+            pendingTableBody.innerHTML = '';
 
-    const response = await fetch(`http://localhost:8080/api/appointment`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const { appointments } = await response.json();
-    console.log(appointments);
+            // Filter for pending appointments
+            const pendingAppointments = data.appointments.filter(apt => apt.status === 'scheduled');
 
-    appointments.forEach((item) => {
-      const newRow = document.createElement("tr");
-      newRow.innerHTML = `
-                <td>${item.studentName}</td>
-                <td>${item.department}</td>
-                <td>${item.usn}</td>
-                <td>${item.semester}</td>
-                <td>${item.reason}</td>
-                <td class="action-buttons">
-                    <button class="${
-                      item.isDelayed ? "reschedule-btn" : "confirm-btn"
-                    }">
-                        ${item.isDelayed ? "Reschedule" : "Confirm"}
-                    </button>
-                </td>
-            `;
-      pendingTableBody.appendChild(newRow);
-    });
+            pendingAppointments.forEach(appointment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${appointment.studentName}</td>
+                    <td>${appointment.department}</td>
+                    <td>${appointment.usn}</td>
+                    <td>${appointment.semester}</td>
+                    <td>${appointment.reason}</td>
+                    <td class="action-buttons">
+                        <button class="confirm-btn">Confirm</button>
+                    </td>
+                `;
+                pendingTableBody.appendChild(row);
+            });
+
+            // Update stats after loading pending data
+            updateDashboardStats();
+        }
+    } catch (error) {
+        console.error('Error loading pending data:', error);
+    }
+  }
+
+  // Handle status change
+  async function handleStatusChange(event) {
+    const checkbox = event.target;
+    const appointmentId = checkbox.dataset.appointmentId;
+    const newStatus = checkbox.checked ? 'completed' : 'scheduled';
+
+    try {
+        const response = await fetch(`http://localhost:8080/api/appointment/${appointmentId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            checkbox.checked = !checkbox.checked; // Revert the checkbox state
+            showNotification('Failed to update appointment status');
+        } else {
+            // Update dashboard stats after successful status change
+            updateDashboardStats();
+            // Reload both dashboard and pending data to reflect changes
+            loadDashboardData();
+            loadPendingData();
+        }
+    } catch (error) {
+        console.error('Error updating appointment status:', error);
+        checkbox.checked = !checkbox.checked; // Revert the checkbox state
+        showNotification('Error updating appointment status');
+    }
   }
 
   // Check delayed sessions
@@ -313,28 +298,55 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  document.addEventListener("change", function (e) {
+  document.addEventListener("change", async function (e) {
     if (e.target.classList.contains("complete-checkbox")) {
       const row = e.target.closest("tr");
-      if (e.target.checked) {
-        const rowData = Array.from(row.cells)
-          .slice(0, 7)
-          .map((cell) => cell.textContent);
-        const studentName = rowData[0];
-        const sessionDate = rowData[4];
-        const sessionReason = rowData[6];
-        const semester = rowData[3];
+      const appointmentId = e.target.dataset.appointmentId;
 
-        updateStudentSessionHistory(
-          studentName,
-          sessionDate,
-          sessionReason,
-          semester
-        );
-        row.remove();
-        saveDashboardData();
-        showNotification("Session completed and session history updated");
-        updateDashboardStats();
+      if (e.target.checked) {
+        try {
+          // Update appointment status in the backend
+          const response = await fetch(`http://localhost:8080/api/appointment/${appointmentId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ completed: true })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update appointment');
+          }
+
+          const rowData = Array.from(row.cells)
+            .slice(0, 7)
+            .map((cell) => cell.textContent);
+          const studentName = rowData[0];
+          const sessionDate = rowData[4];
+          const sessionReason = rowData[6];
+          const semester = rowData[3];
+
+          // Update student session history
+          await updateStudentSessionHistory(
+            studentName,
+            sessionDate,
+            sessionReason,
+            semester
+          );
+
+          // Remove the row from the table
+          row.remove();
+
+          // Show success notification
+          showNotification("Session completed and session history updated");
+
+          // Update dashboard stats
+          updateDashboardStats();
+        } catch (error) {
+          console.error('Error updating appointment:', error);
+          e.target.checked = false; // Revert checkbox if update fails
+          showNotification('Error updating appointment status');
+        }
       }
     }
   });
@@ -361,46 +373,67 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function showConfirmationModal(button, studentName, row) {
-    const studentEmail = `${studentName
-      .toLowerCase()
-      .replace(/\s+/g, ".")}@bmsce.ac.in`;
-    const semester = row.cells[3].textContent;
+  async function showConfirmationModal(button, studentName, row) {
+    try {
+        // Get USN from the row
+        const usn = row.cells[2].textContent;
 
-    const modalHTML = `
-        <div class="modal-overlay" id="appointmentModal">
-            <div class="appointment-modal">
-                <h3>Confirm Appointment for ${studentName}</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Student Email:</label>
-                        <div class="student-email">${studentEmail}</div>
+        // Fetch user data from API using USN
+        const response = await fetch(`http://localhost:8080/api/student/byUSN?usn=${encodeURIComponent(usn)}`, {
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        const { success, userData } = await response.json();
+
+        if (!success || !userData) {
+            console.error('User data not found');
+            showNotification('Error: User data not found');
+            return;
+        }
+
+        const studentEmail = userData.email;
+        const semester = userData.semester;
+        const department = userData.department;
+
+        const modalHTML = `
+            <div class="modal-overlay" id="appointmentModal">
+                <div class="appointment-modal">
+                    <h3>Confirm Appointment for ${studentName}</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Student Email:</label>
+                            <div class="student-email">${studentEmail}</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="sessionDateTime">Session Date & Time:</label>
+                            <input type="datetime-local" id="sessionDateTime" class="large-datetime" required>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="sessionDateTime">Session Date & Time:</label>
-                        <input type="datetime-local" id="sessionDateTime" class="large-datetime" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="confirmationMessage">Confirmation Message:</label>
-                    <textarea id="confirmationMessage" rows="5">Dear ${
-                      studentName.split(" ")[0]
-                    },
+                        <label for="confirmationMessage">Confirmation Message:</label>
+                        <textarea id="confirmationMessage" rows="5">Dear ${studentName.split(" ")[0]},
 Your counseling session has been confirmed for:
 Date: [DATE]
 Time: [TIME]
 Semester: ${semester}
+Department: ${department}
 Location: Counseling Center - Pg block fourth floor near lift
 Counselor: Ms. Sneha H</textarea>
-                </div>
-                <div class="modal-actions">
-                    <button class="cancel-btn" id="cancelModal">Cancel</button>
-                    <button class="send-email-btn" id="sendConfirmation">Send Confirmation Email</button>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="cancel-btn" id="cancelModal">Cancel</button>
+                        <button class="send-email-btn" id="sendConfirmation">Send Confirmation Email</button>
+                    </div>
                 </div>
             </div>
-        </div>
         `;
-    showModal(button, modalHTML, "sessionDateTime");
+        showModal(button, modalHTML, "sessionDateTime");
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        showNotification('Error fetching user data. Please try again.');
+    }
   }
 
   function showRescheduleModal(button, studentName, row) {
@@ -429,8 +462,8 @@ Counselor: Ms. Sneha H</textarea>
                       studentName.split(" ")[0]
                     },
 Your previous counseling session was missed. Please find the new schedule:
-Date: [DATE]
-Time: [TIME]
+Date: ${new Date().toLocaleDateString}
+Time:  ${new Date().toLocaleTimeString}
 Semester: ${semester}
 Location: Counseling Center - Pg block fourth floor near lift
 Counselor: Ms. Sneha H</textarea>
@@ -498,15 +531,15 @@ Looking forward to our session.</textarea>
       button.id;
   }
 
-  function sendConfirmationEmail() {
+  async function sendConfirmationEmail() {
     const modal = document.getElementById("appointmentModal");
     if (!modal) return;
 
     const sessionDateTime = document.getElementById("sessionDateTime");
     if (!sessionDateTime.value) {
-      alert("Please select a date and time for the session");
-      sessionDateTime.focus();
-      return;
+        alert("Please select a date and time for the session");
+        sessionDateTime.focus();
+        return;
     }
 
     const dateObj = new Date(sessionDateTime.value);
@@ -514,54 +547,98 @@ Looking forward to our session.</textarea>
     const formattedTime = formatTime12Hour(dateObj);
 
     const message = document
-      .getElementById("confirmationMessage")
-      .value.replace("[DATE]", formattedDate)
-      .replace("[TIME]", formattedTime);
+        .getElementById("confirmationMessage")
+        .value.replace("[DATE]", formattedDate)
+        .replace("[TIME]", formattedTime);
 
     const button = document.getElementById(modal.dataset.originalButton);
     const row = button?.closest("tr");
 
     if (button && row) {
-      const studentName = row.cells[0].textContent;
-      const department = row.cells[1].textContent;
-      const usn = row.cells[2].textContent;
-      const semester = row.cells[3].textContent;
-      const reason = row.cells[4].textContent;
+        const studentName = row.cells[0].textContent;
+        const department = row.cells[1].textContent;
+        const usn = row.cells[2].textContent;
+        const semester = row.cells[3].textContent;
+        const reason = row.cells[4].textContent;
 
-      const dashboardTableBody = document.querySelector(
-        "#dashboardContent table tbody"
-      );
-      const newRow = document.createElement("tr");
-      newRow.innerHTML = `
-                <td>${studentName}</td>
-                <td>${department}</td>
-                <td>${usn}</td>
-                <td>${semester}</td>
-                <td>${formattedDate}</td>
-                <td>${formattedTime}</td>
-                <td>${reason}</td>
-                <td><input type="checkbox" class="complete-checkbox"></td>
-            `;
-      dashboardTableBody.appendChild(newRow);
+        try {
+            // Create new appointment in backend
+            const response = await fetch('http://localhost:8080/api/appointment/book-appointment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: studentName,
+                    usn: usn,
+                    semester: semester,
+                    department: department,
+                    reason: reason,
+                    date: dateObj.toISOString(),
+                    time: formattedTime,
+                    status: 'scheduled'
+                })
+            });
 
-      row.remove();
-      savePendingData();
-      saveDashboardData();
-      sortDashboardTable();
-      checkDelayedSessions();
+            const data = await response.json();
+            console.log('Appointment creation response:', data); // Debug log
 
-      button.textContent = "✓ Confirmed";
-      button.style.backgroundColor = "#4CAF50";
-      button.style.color = "white";
-      button.disabled = true;
+            if (data.success) {
+                // Send confirmation email
+                const emailResponse = await fetch('http://localhost:8080/api/counsellor/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        usn: usn,
+                        subject: 'Appointment Confirmation',
+                        message: message,
+                        senderEmail: 'khalandermohammed734@gmail.com'
+                    })
+                });
+
+                const emailData = await emailResponse.json();
+                if (!emailData.success) {
+                    console.error('Failed to send email:', emailData.message);
+                }
+
+                // Add to dashboard table
+                const dashboardTableBody = document.querySelector("#dashboardContent table tbody");
+                const newRow = document.createElement("tr");
+                newRow.innerHTML = `
+                    <td>${studentName}</td>
+                    <td>${department}</td>
+                    <td>${usn}</td>
+                    <td>${semester}</td>
+                    <td>${formattedDate}</td>
+                    <td>${formattedTime}</td>
+                    <td>${reason}</td>
+                    <td>
+                        <input type="checkbox"
+                               class="status-checkbox"
+                               data-appointment-id="${data.appointment._id}">
+                    </td>
+                `;
+                dashboardTableBody.appendChild(newRow);
+
+                // Remove from pending table
+                row.remove();
+
+                // Update stats
+                updateDashboardStats();
+
+                showNotification("Confirmation email sent successfully! Appointment moved to Dashboard.");
+            } else {
+                showNotification(data.message || "Failed to create appointment. Please try again.");
+            }
+        } catch (error) {
+            console.error('Error creating appointment:', error);
+            showNotification("Error creating appointment. Please try again.");
+        }
     }
 
-    showNotification(
-      "Confirmation email sent successfully! Appointment moved to Dashboard."
-    );
     modal.remove();
-    filterTablesByDepartment(document.getElementById("deptDropdown").value);
-    updateDashboardStats();
   }
 
   function sendRescheduleEmail() {
@@ -620,7 +697,6 @@ Looking forward to our session.</textarea>
       "Reschedule email sent successfully! Appointment moved to Dashboard."
     );
     modal.remove();
-    filterTablesByDepartment(document.getElementById("deptDropdown").value);
     updateDashboardStats();
   }
 
@@ -993,15 +1069,22 @@ Looking forward to our session.</textarea>
 
     const sessionsContainer = document.getElementById("modalSessions");
     sessionsContainer.innerHTML = "";
-    studentData.sessions.forEach((session) => {
-      const sessionItem = document.createElement("div");
-      sessionItem.className = "session-item";
-      sessionItem.innerHTML = `
-                <div class="session-date">${session.date}</div>
+
+    if (studentData.sessions && studentData.sessions.length > 0) {
+        studentData.sessions.forEach((session) => {
+            const sessionItem = document.createElement("div");
+            sessionItem.className = "session-item";
+            const sessionDate = new Date(session.date).toLocaleDateString();
+            sessionItem.innerHTML = `
+                <div class="session-date">${sessionDate}</div>
                 <div class="session-reason">${session.reason}</div>
+                <div class="session-status ${session.status}">${session.status}</div>
             `;
-      sessionsContainer.appendChild(sessionItem);
-    });
+            sessionsContainer.appendChild(sessionItem);
+        });
+    } else {
+        sessionsContainer.innerHTML = "<p>No sessions recorded</p>";
+    }
 
     const savedRemarks = loadRemarks(studentData.usn);
     document.getElementById("modalRemarks").value = savedRemarks;
@@ -1192,4 +1275,58 @@ Looking forward to our session.</textarea>
     dropdown.style.display = "none";
     showSignoutModal();
   });
+
+  // Function to fetch and display student data
+  async function loadStudentRecords() {
+    try {
+        const response = await fetch('http://localhost:8080/api/student', {
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        const users = await response.json();
+        const studentCardsContainer = document.querySelector('.student-cards-container');
+        studentCardsContainer.innerHTML = ''; // Clear existing cards
+
+        users.forEach(user => {
+            const studentCard = document.createElement('div');
+            studentCard.className = 'student-card';
+            studentCard.setAttribute('data-student', JSON.stringify({
+                name: user.fullName,
+                usn: user.usn,
+                dept: user.department,
+                sem: user.semester,
+                sessions: user.sessionHistory || [], // Use actual session history
+                soulScore: user.soul_score || 75,
+                remarks: ""
+            }));
+
+            studentCard.innerHTML = `
+                <div class="student-avatar">${user.fullName.charAt(0)}</div>
+                <div class="student-details">
+                    <h3 class="student-name">${user.fullName}</h3>
+                    <p class="student-dept">${user.department}</p>
+                    <p class="student-sem">${user.semester}</p>
+                    <p class="student-soul-score">Soul Score: ${user.soul_score || 75}</p>
+                    <p class="session-count">Sessions: ${user.sessionHistory ? user.sessionHistory.length : 0}</p>
+                </div>
+            `;
+
+            // Add click event listener for the profile modal
+            studentCard.addEventListener('click', function() {
+                const studentData = JSON.parse(this.getAttribute('data-student'));
+                showStudentProfile(studentData);
+            });
+
+            studentCardsContainer.appendChild(studentCard);
+        });
+
+        // Update dashboard stats
+        updateDashboardStats();
+    } catch (error) {
+        console.error('Error loading student records:', error);
+        showNotification('Error loading student records');
+    }
+  }
 });

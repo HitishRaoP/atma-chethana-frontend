@@ -22,9 +22,6 @@
             <a href="#" data-section="pending">Pending Appointments</a>
             <a href="#" data-section="students">Student Record</a>
         </nav>
-        <select id="deptDropdown">
-            <option value="">Select Department</option>
-        </select>
         <div class="right-section">
             <!-- Google Sheet icon updated to specific spreadsheet -->
             <a href="https://docs.google.com/spreadsheets/d/1TiQaayBPix6Za3Z0BpLM8S-CLrH07K-7ZOgciMyaLyA/edit?authuser=mohithjain.cs22@bmsce.ac.in" target="_blank" class="gsheet-icon">
@@ -99,20 +96,10 @@
                             <th>Appointment Date</th>
                             <th>Time</th>
                             <th>Reason</th>
+                            <th>Completed</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>John Doe</td>
-                            <td>Physics Department</td>
-                            <td>1BM22PH115</td>
-                            <td>3rd</td>
-                            <td>2025-04-05</td>
-                            <td>12:00</td>
-                            <td>feeling lost</td>
-                            <td><input type="checkbox" class="complete-checkbox"></td>
-                        </tr>
-
                     </tbody>
                 </table>
             </div>
@@ -133,7 +120,6 @@
                         </tr>
                     </thead>
                     <tbody class="pending-table-body">
-
                     </tbody>
                 </table>
             </div>
@@ -166,26 +152,7 @@
 
             <!-- Student Cards Container -->
             <div class="student-cards-container">
-                <div class="student-card" data-student='{
-                    "name": "Mohith Jain",
-                    "usn": "1BM22CS162",
-                    "dept": "Computer Science and Engineering",
-                    "sem": "6th Sem",
-                    "sessions": [
-
-                    ],
-                    "soulScore": 75,
-                    "remarks": ""
-                }'>
-                    <div class="student-avatar">M</div>
-                    <div class="student-details">
-                        <h3 class="student-name">Mohith Jain</h3>
-                        <p class="student-dept">Computer Science and Engineering</p>
-                        <p class="student-sem">6th Sem</p>
-                    </div>
-                </div>
-
-                </div>
+                <!-- Student cards will be dynamically added here -->
             </div>
         </div>
 
