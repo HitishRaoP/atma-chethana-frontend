@@ -659,7 +659,7 @@ Looking forward to our session.</textarea>
       BMS College of Engineering<br>
       Bull Temple Road, Basavanagudi,<br>
       Bengaluru - 560019, Karnataka, India<br>
-      <a href="mailto:athma.chethana@bmsce.ac.in" style="color:#4CAF50;text-decoration:none;">atma.chethana@bmsce.ac.in</a>
+      <a href="mailto:counselling@bmsce.ac.in" style="color:#4CAF50;text-decoration:none;">counselling@bmsce.ac.in</a>
     </p>
   </div>
 </body>
