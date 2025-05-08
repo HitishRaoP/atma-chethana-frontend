@@ -1,4 +1,5 @@
-const BACKEND_URL = "http://localhost:8080";
+
+ const BACKEND_URL = 'https://atma-chethana-backend.vercel.app';
 
 document.addEventListener("DOMContentLoaded", function () {
   // Handle login form submission
